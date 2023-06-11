@@ -23,23 +23,29 @@ HOSTNAME=`cat $TMPXML| grep -e HOSTNAME |sed -n -e '/value\=/ s/.*\=\" *//p'|sed
 SSH_PUB=`cat $TMPXML| grep -e SSH_PUB |sed -n -e '/value\=/ s/.*\=\" *//p'|sed 's/\"\/>//'`
 
 # network file
-NETWORKFILE="/etc/netplan/00-installer-config.yaml"
-echo "network:" > $NETWORKFILE
-echo "    version: 2" >> $NETWORKFILE
-echo "    renderer: networkd" >> $NETWORKFILE
-echo "    ethernets:" >> $NETWORKFILE
-echo "        ens160:" >> $NETWORKFILE
-echo "            dhcp4: no" >> $NETWORKFILE
-echo "            dhcp6: no" >> $NETWORKFILE
-echo "            addresses:" >> $NETWORKFILE
-echo "              - ""$IPV4""/25" >> $NETWORKFILE
-echo "            nameservers:" >> $NETWORKFILE
-echo "                addresses:" >> $NETWORKFILE 
-echo "                    - 1.1.1.1" >> $NETWORKFILE 
-echo "                    - 8.8.8.8" >> $NETWORKFILE 
-echo "            routes:" >> $NETWORKFILE 
-echo "              - to: default" >> $NETWORKFILE 
-echo "                via: 217.138.215.67" >> $NETWORKFILE 
+NETWORKFILE="/root/automation/00-installer-config.yaml"
+
+sed -E 's/- [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}\//- '"$IPV4"'\//' $NETWORKFILE
+sed -E 's/\/[0-9]{2}/\/'"$SUBNET"'/' $NETWORKFILE
+sed -E 's/via: [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}/via: '"$GATE4"'/' $NETWORKFILE
+#cat $NETWORKFILE
+
+#echo "network:" > $NETWORKFILE
+#echo "    version: 2" >> $NETWORKFILE
+#echo "    renderer: networkd" >> $NETWORKFILE
+#echo "    ethernets:" >> $NETWORKFILE
+#echo "        ens160:" >> $NETWORKFILE
+#echo "            dhcp4: no" >> $NETWORKFILE
+#echo "            dhcp6: no" >> $NETWORKFILE
+#echo "            addresses:" >> $NETWORKFILE
+#echo "              - ""$IPV4""/25" >> $NETWORKFILE
+#echo "            nameservers:" >> $NETWORKFILE
+#echo "                addresses:" >> $NETWORKFILE 
+#echo "                    - 1.1.1.1" >> $NETWORKFILE 
+#echo "                    - 8.8.8.8" >> $NETWORKFILE 
+#echo "            routes:" >> $NETWORKFILE 
+#echo "              - to: default" >> $NETWORKFILE 
+#echo "                via: 217.138.215.67" >> $NETWORKFILE 
 
 # restarting network
 netplan apply

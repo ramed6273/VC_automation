@@ -22,49 +22,48 @@ HOSTNAME=`cat $TMPXML| grep -e HOSTNAME |sed -n -e '/value\=/ s/.*\=\" *//p'|sed
 # ssh public key
 SSH_PUB=`cat $TMPXML| grep -e SSH_PUB |sed -n -e '/value\=/ s/.*\=\" *//p'|sed 's/\"\/>//'`
 
+PASSWORD=`cat $TMPXML| grep -e PASSWORD |sed -n -e '/value\=/ s/.*\=\" *//p'|sed 's/\"\/>//'`
+
 # network file
 NETWORKFILE="/root/automation/00-installer-config.yaml"
 
-sed -E 's/- [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}\//- '"$IPV4"'\//' $NETWORKFILE
-sed -E 's/\/[0-9]{2}/\/'"$SUBNET"'/' $NETWORKFILE
-sed -E 's/via: [0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}/via: '"$GATE4"'/' $NETWORKFILE
-#cat $NETWORKFILE
+sed -i "s/IPv4/$IPV4/" $NETWORKFILE
+sed -i "s/IPv6/$IPV6/" $NETWORKFILE
+sed -i "s/SUBNET4/$SUBNET4/" $NETWORKFILE
+sed -i "s/SUBNET6/$SUBNET6/" $NETWORKFILE
+sed -i "s/GATE4/$GATE4/" $NETWORKFILE
+sed -i "s/GATE6/$GATE6/" $NETWORKFILE
 
-#echo "network:" > $NETWORKFILE
-#echo "    version: 2" >> $NETWORKFILE
-#echo "    renderer: networkd" >> $NETWORKFILE
-#echo "    ethernets:" >> $NETWORKFILE
-#echo "        ens160:" >> $NETWORKFILE
-#echo "            dhcp4: no" >> $NETWORKFILE
-#echo "            dhcp6: no" >> $NETWORKFILE
-#echo "            addresses:" >> $NETWORKFILE
-#echo "              - ""$IPV4""/25" >> $NETWORKFILE
-#echo "            nameservers:" >> $NETWORKFILE
-#echo "                addresses:" >> $NETWORKFILE 
-#echo "                    - 1.1.1.1" >> $NETWORKFILE 
-#echo "                    - 8.8.8.8" >> $NETWORKFILE 
-#echo "            routes:" >> $NETWORKFILE 
-#echo "              - to: default" >> $NETWORKFILE 
-#echo "                via: 217.138.215.67" >> $NETWORKFILE 
-
-# restarting network
 netplan apply
 
 # ping gate to find route
-ping -c 10 $GATE4
+ping -c 4 $GATE4
 
-# check internet connection
-wget -q --spider http://google.com
-if [ $? -eq 0 ]; then
-	echo "VM IS ONLINE"
+if [ $? -eq 0 ]
+then
+	echo "VM is online"
 else
-	shutdown -h now
+	echo "ss"
 fi
 
+# check internet connection
+#wget -q --spider http://google.com
+#if [ $? -eq 0 ]; then
+#	echo "VM IS ONLINE"
+#else
+#	shutdown -h now
+#fi
+
 # create ssh key file
-rm -f /root/.ssh/authorized_keys
-touch /root/.ssh/authorized_keys
-echo $SSH_PUB > /root/.ssh/authorized_keys
+if [ $SSH_PUB ]
+then	
+	echo $SSH_PUB > /root/.ssh/authorized_keys
+else
+	echo -e "_Asampanel123\n_Asampanel123" | passwd root
+fi
+
+apt update
+DEBIAN_FRONTEND=noninteractive apt upgrade -y --force-yes -fuy -o Dpkg::Optitons::='--force-confold'
 
 # deleting XML file
 rm -f $TMPXML

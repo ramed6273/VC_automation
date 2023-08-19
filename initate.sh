@@ -24,3 +24,5 @@ chmod 664 startup_script.service
 
 systemctl daemon-reload
 systemctl enable startup_script.service
+
+reboot
